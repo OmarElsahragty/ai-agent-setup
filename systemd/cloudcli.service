@@ -1,0 +1,22 @@
+[Unit]
+Description=CloudCLI web UI for Claude Code (${AI_SETUP_DOMAIN})
+After=network.target claude-router.service
+Wants=claude-router.service
+
+[Service]
+Type=simple
+User=${USER}
+WorkingDirectory=${AI_SETUP_ROOT}
+EnvironmentFile=${AI_SETUP_ROOT}/cloudcli/.env
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+Environment="NODE_ENV=production"
+ExecStartPre=/usr/bin/mkdir -p ${AI_SETUP_ROOT}/cloudcli/data
+ExecStart=/usr/bin/node ${AI_SETUP_ROOT}/cloudcli/node_modules/@cloudcli-ai/cloudcli/dist-server/server/modules/cli/cli.js
+Restart=always
+RestartSec=5
+MemoryHigh=5G
+MemoryMax=7G
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

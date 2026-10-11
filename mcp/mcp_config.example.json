@@ -1,0 +1,59 @@
+{
+  "mcpServers": {
+    "sequential-thinking": {
+      "type": "http",
+      "url": "http://127.0.0.1:8790/mcp/sequential-thinking",
+      "serverUrl": "http://127.0.0.1:8790/mcp/sequential-thinking"
+    },
+    "mcp-reasoner": {
+      "type": "http",
+      "url": "http://127.0.0.1:8790/mcp/mcp-reasoner",
+      "serverUrl": "http://127.0.0.1:8790/mcp/mcp-reasoner"
+    },
+    "exa": {
+      "type": "http",
+      "url": "http://127.0.0.1:8790/mcp/exa",
+      "serverUrl": "http://127.0.0.1:8790/mcp/exa"
+    },
+    "unified-memory": {
+      "type": "http",
+      "url": "http://127.0.0.1:8790/mcp/unified-memory",
+      "serverUrl": "http://127.0.0.1:8790/mcp/unified-memory"
+    },
+    "postgres": {
+      "type": "http",
+      "url": "http://127.0.0.1:8790/mcp/postgres",
+      "serverUrl": "http://127.0.0.1:8790/mcp/postgres"
+    },
+    "playwright": {
+      "type": "http",
+      "url": "http://127.0.0.1:8790/mcp/playwright",
+      "serverUrl": "http://127.0.0.1:8790/mcp/playwright"
+    },
+    "cloudflare": {
+      "type": "http",
+      "url": "http://127.0.0.1:8790/mcp/cloudflare",
+      "serverUrl": "http://127.0.0.1:8790/mcp/cloudflare"
+    },
+    "codebase-memory": {
+      "type": "http",
+      "url": "http://127.0.0.1:8790/mcp/codebase-memory",
+      "serverUrl": "http://127.0.0.1:8790/mcp/codebase-memory"
+    },
+    "testsprite": {
+      "type": "http",
+      "url": "http://127.0.0.1:8790/mcp/testsprite",
+      "serverUrl": "http://127.0.0.1:8790/mcp/testsprite"
+    },
+    "gcloud": {
+      "type": "http",
+      "url": "http://127.0.0.1:8790/mcp/gcloud",
+      "serverUrl": "http://127.0.0.1:8790/mcp/gcloud"
+    },
+    "local-decide": {
+      "type": "http",
+      "url": "http://127.0.0.1:8790/mcp/local-decide",
+      "serverUrl": "http://127.0.0.1:8790/mcp/local-decide"
+    }
+  }
+}

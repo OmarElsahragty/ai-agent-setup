@@ -1,0 +1,53 @@
+# D9 — diff triage: which review gates a change needs.
+# Consumed by policy.triage_diff(diff_text) -> list[str], used by
+# scripts/review-triage.py to pick the gate chain. Purely deterministic.
+version: 1
+
+always:
+  - code-reviewer
+  - tester
+
+gates:
+  security-reviewer:
+    reason: "auth, network, secrets, systemd or hook surface changed"
+    any_path:
+      - "(?:^|/)\\.env(?:\\.|$)"
+      - "(?:^|/)(?:auth|authn|authz|login|session|permissions?|middleware|security)(?:/|\\.|$)"
+      - "(?:^|/)(?:nginx|caddy|cloudflared|ufw|iptables|firewall)(?:/|\\.|$)"
+      - "(?:^|/)systemd/|\\.service(?:\\.|$)|\\.timer(?:\\.|$)"
+      - "(?:^|/)hooks?/|guard-[\\w-]+\\.py|hooks\\.json|settings\\.json"
+      - "(?:^|/)opencode\\.jsonc?$|(?:^|/)hooks\\.json$"
+      - "\\.pem$|\\.key$|id_rsa|credentials"
+    any_text:
+      - '(?i)\b(?:api[_-]?key|secret|password|token|jwt|oauth|session cookie|csrf|cors|tls|ssl|ssh key|bearer)\b'
+      - '(?i)\b(?:systemctl|ufw|iptables|reverse proxy|cloudflare tunnel|bind\s+0\.0\.0\.0|chmod\s+\+x|curl[^\n]*\|\s*(?:ba)?sh)\b'
+
+  database-analyst:
+    reason: "schema, migration or SQL surface changed"
+    any_path:
+      - "(?:^|/)schema\\.[tj]s$"
+      - "(?:^|/)(?:migrations?|drizzle|sql)(?:/|\\.|$)"
+      - "\\.sql$"
+      - "(?:^|/)db/(?:schema|migrate)"
+      - "(?:^|/)(?:supabase|drizzle)\\.(?:config\\.)?[tj]s$"
+    any_text:
+      - '(?is)\b(?:CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|CREATE\s+INDEX|CREATE\s+TYPE|ADD\s+COLUMN|DROP\s+COLUMN|information_schema|pg_catalog)\b'
+      - '(?i)\bdrizzle\b|\bmigration\b|\bparity test\b|\bunique index\b'
+
+  qa:
+    reason: "apps/web surface or an API route changed"
+    any_path:
+      - "(?:^|/)apps/web/"
+      - "(?:^|/)(?:app|pages|src/app)/api/"
+      - "(?:^|/)routes?(?:\\.[tj]s|/)|(?:^|/)api/.*\\.(?:ts|tsx|js|jsx)$"
+      - "(?:^|/)(?:components|pages|templates)/.*\\.(?:tsx|jsx|css)$"
+      - "next\\.config\\.[jt]s$"
+    any_text:
+      - '(?i)\bNextResponse\b|\buse server\b|\bexport\s+(?:async\s+)?function\s+(?:GET|POST|PUT|PATCH|DELETE)\b'
+      - '(?i)\b(?:endpoint|route handler|api route)\b'
+
+# Gate order is fixed so review-triage.py output is deterministic.
+order:
+  - security-reviewer
+  - database-analyst
+  - qa

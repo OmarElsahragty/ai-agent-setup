@@ -1,0 +1,80 @@
+{
+  "mcpServers": {
+    "sequential-thinking": {
+      "command": "${AI_SETUP_ROOT}/scripts/sequential-thinking-mcp-wrapper.js"
+    },
+    "mcp-reasoner": {
+      "command": "${AI_SETUP_ROOT}/scripts/mcp-reasoner-wrapper.js"
+    },
+    "exa": {
+      "command": "/bin/bash",
+      "args": [
+        "-c",
+        "export EXA_API_KEY=\"$(grep -E '^EXA_API_KEY=' ${AI_SETUP_ROOT}/.env | head -1 | cut -d= -f2-)\"; exec /usr/bin/node ${AI_SETUP_ROOT}/node_modules/exa-mcp-server/dist/stdio.cjs"
+      ]
+    },
+    "unified-memory": {
+      "command": "/usr/bin/python3",
+      "args": [
+        "${AI_SETUP_ROOT}/unified-memory/server.py",
+        "mcp"
+      ]
+    },
+    "postgres": {
+      "type": "stdio",
+      "command": "/usr/bin/postgres-mcp",
+      "args": [
+        "--tools-config",
+        "${AI_SETUP_ROOT}/mcp/postgres-tools-config.json"
+      ],
+      "env": {
+        "POSTGRES_CONNECTION_STRING": "${POSTGRES_CONNECTION_STRING}"
+      }
+    },
+    "playwright": {
+      "command": "/usr/bin/playwright-mcp",
+      "args": [
+        "--no-sandbox",
+        "--headless",
+        "--browser",
+        "chromium"
+      ],
+      "env": {
+        "DISPLAY": "${DISPLAY}",
+        "PLAYWRIGHT_HOST_PLATFORM_OVERRIDE": "${PLAYWRIGHT_HOST_PLATFORM_OVERRIDE}"
+      }
+    },
+    "cloudflare": {
+      "command": "/bin/bash",
+      "args": [
+        "-c",
+        "export CLOUDFLARE_API_TOKEN=\"$(grep -E '^CLOUDFLARE_API_TOKEN=' ${AI_SETUP_ROOT}/.env | head -1 | cut -d= -f2-)\"; export CLOUDFLARE_ACCOUNT_ID=\"$(grep -E '^CLOUDFLARE_ACCOUNT_ID=' ${AI_SETUP_ROOT}/.env | head -1 | cut -d= -f2-)\"; exec /usr/bin/node ${AI_SETUP_ROOT}/node_modules/@cloudflare/mcp-server-cloudflare/dist/index.js run \"$CLOUDFLARE_ACCOUNT_ID\""
+      ]
+    },
+    "codebase-memory": {
+      "command": "/usr/bin/codebase-memory-mcp"
+    },
+    "testsprite": {
+      "command": "${AI_SETUP_ROOT}/scripts/testsprite-mcp-wrapper.js"
+    },
+    "gcloud": {
+      "command": "/bin/bash",
+      "args": [
+        "-c",
+        "export PATH=\"/usr/lib/google-cloud-sdk/bin:$PATH\"; exec /usr/bin/node ${AI_SETUP_ROOT}/node_modules/@google-cloud/gcloud-mcp/dist/bundle.js"
+      ],
+      "env": {
+        "CLOUDSDK_CORE_DISABLE_PROMPTS": "${CLOUDSDK_CORE_DISABLE_PROMPTS}"
+      }
+    },
+    "local-decide": {
+      "command": "/usr/bin/python3",
+      "args": [
+        "${AI_SETUP_ROOT}/local-decide/mcp.py"
+      ],
+      "env": {
+        "LOCAL_DECIDE_URL": "${LOCAL_DECIDE_URL}"
+      }
+    }
+  }
+}

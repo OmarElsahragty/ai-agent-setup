@@ -1,0 +1,40 @@
+# D1 / D5 — task-domain classification and memory recall.
+# Loaded by policy.py via yaml.safe_load. Never edited by a hook; owner-editable.
+version: 1
+
+# Head consumed by Engine.decide(text, heads={"domain": ...}).
+# RESEARCH.md §3: label descriptions cost accuracy on Decide; keep them SHORT.
+domain:
+  id: D1
+  mode: log          # log | warn | block (task directive: all but D3 best_agent = log)
+  emit: context      # log | context | warn  (channel used when the head fires)
+  threshold: 0.35
+  margin: 0.15
+  labels:
+    "quant-trading": "Trading strategy work: broker orders, fees, backtests, engine, parity, oracles."
+    "homelab-infra": "Host and service ops: Docker, systemd, nginx, tunnels, backups, monitoring."
+    "agents-config": "Agent tooling: subagents, model routing, hooks, MCP, skills, rules files."
+    "jobs-hunter": "Job hunting: CVs, applications, interviews, postings, offers."
+    "portfolio": "Personal portfolio site: pages, design, content, deployment."
+    "general": "Anything else: generic coding, questions, small edits, conversation."
+skip_labels:
+  - general
+
+memory:
+  search_limit: 15          # qdrant_client.search(query, limit=15)
+  rerank_model: "0.6b"      # llama.cpp :11435
+  rerank_top_n: 3           # D1
+  max_chars: 6000           # hard cap on the additionalContext string
+  min_rerank_score: 0.05    # G2 2026-10-02: 0.6B scores are bimodal (relevant 0.06-0.98, noise <= 0.014); the 0.5 default dropped the whole trading band
+  max_snippet_chars: 420    # per-memory snippet cap before the total cap applies
+  header: "Relevant memory (auto):"
+  timeout_s: 2.0
+
+# D5 (SubagentStart): domain on the work-order prompt, then a SHORTER recall.
+subagent_start:
+  search_limit: 8
+  rerank_model: "0.6b"
+  rerank_top_n: 2
+  max_chars: 2400
+  header: "Role context (auto):"
+  hard_rules_from_card: true   # 3 rules parsed out of rules/agents.yaml description

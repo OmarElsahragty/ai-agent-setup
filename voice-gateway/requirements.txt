@@ -1,0 +1,11 @@
+# Install: python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt
+# voice-gateway pinned dependencies (CPython 3.12; slimmed 2026-10-07 to the
+# Gemini Live token service: no speech/model packages anymore).
+# app.py imports: fastapi (+starlette via fastapi), httpx, PyJWT, uvicorn.
+# tests additionally use: pytest, cryptography (PyJWT RSA test keys).
+PyJWT==2.15.1
+cryptography==50.0.2
+fastapi==0.142.2
+httpx==0.28.1
+pytest==9.1.1
+uvicorn==0.54.0

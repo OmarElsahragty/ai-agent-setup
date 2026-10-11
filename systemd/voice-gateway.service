@@ -1,0 +1,76 @@
+# voice-gateway systemd unit TEMPLATE.
+# NOT installed by the build worker: the service-management worker copies this to
+# /etc/systemd/system/voice-gateway.service, runs `systemctl daemon-reload` and
+# `systemctl enable --now voice-gateway`.
+#
+# Prerequisites (Tier B apply steps, owner-run; see README "Service user"):
+#   1. useradd --system --no-create-home --home-dir /nonexistent --shell /usr/sbin/nologin \
+#        --user-group voice
+#   2. install -d -m 750 -o root -g root /etc/voice-gateway
+#      install -m 600 -o root -g root /dev/null /etc/voice-gateway/gemini_key
+#      then write the Gemini API key value into it (LoadCredential is read by
+#      PID 1 as root, so the file stays root-only; the service sees a private
+#      copy). The key is never an Environment= line.
+# Rollback: systemctl disable --now voice-gateway && rm /etc/systemd/system/voice-gateway.service
+
+[Unit]
+Description=voice-gateway Gemini Live token service (ephemeral tokens for the CloudCLI voice front)
+After=network.target
+StartLimitIntervalSec=120
+StartLimitBurst=5
+
+[Service]
+Type=simple
+# S3 (owner ruling 2026-10-07): dedicated non-root user. No GPU groups needed
+# anymore (no local speech models since WO-VL-GW 2026-10-07).
+User=voice
+Group=voice
+WorkingDirectory=${AI_SETUP_ROOT}/voice-gateway
+# Exactly ONE worker: the token rate limit and the JWKS cache are
+# per-process state (app.py) — more workers would multiply both.
+# F9 (2026-10-07): `python -m uvicorn` does not depend on the venv script's
+# shebang (a moved venv crash-looped 203/EXEC); StartLimit* stops a broken
+# start after 5 tries instead of looping forever.
+# F10: no uvicorn access log — the app's own "client event=" lines carry the
+# beacons, errors are still logged.
+ExecStart=${AI_SETUP_ROOT}/voice-gateway/.venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 3012 --workers 1 --log-level info --no-access-log
+Restart=always
+RestartSec=3
+
+# S3: the Gemini API key is injected as $CREDENTIALS_DIRECTORY/gemini_key
+# (read per request, before the env-by-name fallback); never an Environment=
+# line, never world-readable.
+LoadCredential=gemini_key:/etc/voice-gateway/gemini_key
+
+# Gemini Live setup locks (defaults match app.py; tune here without code).
+Environment=VOICE_LIVE_MODEL=gemini-3.8-live
+Environment=VOICE_LIVE_VOICE=Charon
+Environment=VOICE_LIVE_LANG=ar-EG
+
+# S1 (owner ruling 2026-10-07): in-app Cloudflare Access JWT validation.
+# AUD/team are public identifiers (they appear in every Access JWT aud/iss).
+Environment=CF_ACCESS_TEAM_DOMAIN=${CF_ACCESS_TEAM_DOMAIN}
+Environment=CF_ACCESS_AUD=${CF_ACCESS_AUD}
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+# Call transcripts (owner ruling 2026-10-07): /var/lib/voice-gateway, owner-only.
+StateDirectory=voice-gateway
+StateDirectoryMode=0700
+
+# F11 (WO-VL-FIX) staged hardening: no capabilities, network families limited
+# to IP + unix sockets, no devices, kernel state/log/modules off-limits.
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+RestrictSUIDSGID=true
+LockPersonality=true
+ProtectProc=invisible
+
+[Install]
+WantedBy=multi-user.target

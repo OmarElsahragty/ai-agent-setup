@@ -1,0 +1,58 @@
+#!/bin/bash
+# OpenCode wrapper: export the provider key from the setup .env (opencode.jsonc resolves
+# {env:...} before plugins run, so the key must be in the process env at launch) and unset
+# the router URL a parent Claude Code session may have exported. Values are never printed.
+set -euo pipefail
+ROOT="${AI_SETUP_ROOT:-$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)}"
+export AI_SETUP_ROOT="$ROOT"
+unset ANTHROPIC_BASE_URL   # inherited from a Claude Code session it would point at the local router
+
+KEY_NAME="OPENCODE_GO_API_KEY"
+ENV_FILE="$ROOT/.env"
+if [ -z "${!KEY_NAME:-}" ] && [ -r "$ENV_FILE" ]; then
+  while IFS= read -r line || [ -n "$line" ]; do
+    line="${line%$'\r'}"
+    line="${line#"${line%%[![:space:]]*}"}"   # trim leading whitespace
+    line="${line#export }"
+    if [ "${line%%=*}" = "$KEY_NAME" ]; then
+      v="${line#*=}"
+      v="${v%\"}"; v="${v#\"}"; v="${v%\'}"; v="${v#\'}"
+      export "$KEY_NAME"="$v"
+    fi
+  done < "$ENV_FILE"
+fi
+[ -n "${!KEY_NAME:-}" ] || echo "opencode wrapper: $KEY_NAME not set (looked in $ENV_FILE); DeepSeek lanes will fail" >&2
+# Locate the CLI: OPENCODE_BIN wins, then the stock install path, then the first `opencode` on PATH that
+# is not this wrapper. The wrapper is compared by resolved path AND by content, so a second installed copy
+# can never make the two exec each other.
+SELF_PATH="${BASH_SOURCE[0]}"
+case "$SELF_PATH" in
+  */*) ;;
+  *) SELF_PATH="$(command -v -- "$SELF_PATH" 2>/dev/null || printf '%s' "${BASH_SOURCE[0]}")" ;;
+esac
+WRAPPER_SELF="$(readlink -f -- "$SELF_PATH" 2>/dev/null || printf '%s' "$SELF_PATH")"
+WRAPPER_SIZE="$(stat -c %s -- "$SELF_PATH" 2>/dev/null || echo 0)"
+
+resolve_opencode_cli() {
+  local candidate dir
+  if [ -n "${OPENCODE_BIN:-}" ]; then printf '%s\n' "$OPENCODE_BIN"; return 0; fi
+  candidate="${HOME:-}/.opencode/bin/opencode"
+  if [ -f "$candidate" ] && [ -x "$candidate" ]; then printf '%s\n' "$candidate"; return 0; fi
+  local IFS=:
+  for dir in $PATH; do
+    candidate="${dir:-.}/opencode"
+    { [ -f "$candidate" ] && [ -x "$candidate" ]; } || continue
+    [ "$(readlink -f -- "$candidate" 2>/dev/null)" = "$WRAPPER_SELF" ] && continue
+    if [ "$(stat -c %s -- "$candidate" 2>/dev/null)" = "$WRAPPER_SIZE" ] && cmp -s -- "$candidate" "$SELF_PATH"; then
+      continue
+    fi
+    printf '%s\n' "$candidate"; return 0
+  done
+  return 1
+}
+
+OPENCODE_CLI="$(resolve_opencode_cli)" || {
+  echo "opencode wrapper: no opencode CLI found - set OPENCODE_BIN or put opencode on PATH" >&2
+  exit 127
+}
+exec "$OPENCODE_CLI" "$@"

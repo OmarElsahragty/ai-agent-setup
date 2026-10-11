@@ -1,0 +1,99 @@
+# D8 — Bash risk tiering (PreToolUse Bash, opencode bash, agy run_command).
+# Tier C -> Claude permissionDecision "ask" (human gate, never silently allowed).
+# Tier B -> additionalContext "Tier B: state rollback plan".
+# risk_tier GLiNER head -> log only.
+version: 1
+
+# Data-vs-command: tier B/C regexes run on the command with heredoc bodies and
+# echo/printf string arguments removed (that text is data being written or
+# printed, not a command being run). A `bash -c "…"` string still matches: it
+# executes verbatim.
+strip_data_args:
+  heredoc: true
+  echo_printf: true
+
+# Protected study/data roots (generic defaults; adjust for your install).
+study_roots:
+  - /srv/study
+  - /srv/study-b
+  - /var/tmp/study
+study_delete_re: "(?:/srv/study|/srv/study-b|/var/tmp/study|\\breview_notes\\b)"
+delete_re: "(?<![\\w.-])(rm|rmdir|unlink|shred|truncate)(?![\\w-])|rmtree|rmSync|rmdirSync|os\\.remove|\\bunlink\\("
+
+# Tier C — destructive / irreversible. Asks the human.
+tier_c:
+  - id: rm_rf_protected
+    re: "(?<![\\w.-])rm\\s+(?:-[a-zA-Z]*[rRfF][a-zA-Z]*\\s+)+(?:-[a-zA-Z]*[rRfF][a-zA-Z]*\\s+)*/((?:storage|homeLap)(?:/\\S*)?)"
+    reason: >-
+      Recursive delete under /storage or ${AI_SETUP_ROOT}. Study data is never deleted
+      (owner directive 2026-09-28): write a new versioned file or move the old
+      one to a superseded/.bak name instead.
+  - id: study_delete
+    re: "(?<![\\w.-])(rm|rmdir|truncate|shred)(?![\\w-]).{0,400}(?:/srv/study|/srv/study-b|/var/tmp/study|review_notes)"
+    reason: >-
+      This would delete study data (/srv/study, /srv/study-b,
+      /var/tmp/study, review_notes). Version or move instead of deleting.
+  - id: destructive_sql
+    re: "(?is)\\b(DROP\\s+(TABLE|DATABASE|SCHEMA)|TRUNCATE(\\s+TABLE)?|DELETE\\s+FROM\\s+\\w+)"
+    reason: >-
+      Destructive SQL (DROP/TRUNCATE/DELETE). Schema and data changes go through
+      a migration plan reviewed by database-analyst.
+  - id: git_force_push
+    re: "git\\s+push\\b[^\\n;&|]*(--force|--force-with-lease|(^|\\s)-f(\\s|$))"
+    reason: >-
+      Force push rewrites shared history. The owner commits and pushes; confirm
+      with the owner before any force push.
+  - id: git_commit
+    re: "(?<![\\w.-])git\\s+(?:-{1,2}[A-Za-z][\\w-]*(?:[ =]\\S+)?\\s+)*commit(?![-\\w])"
+    reason: >-
+      git commit needs owner approval: the owner approves commits. Prepare the
+      change (stage it, describe it) and hand it to the owner instead.
+  - id: mkfs
+    re: "(?<![\\w./-])mkfs(\\.[a-z0-9]+)?\\b"
+    reason: "mkfs destroys a filesystem. Confirm with the owner first."
+  - id: dd_to_device
+    re: "(?<![\\w-])dd\\b[^\\n;&|]*\\bof=/dev/"
+    reason: "dd writing straight to a block device is unrecoverable. Confirm first."
+  - id: service_stop
+    re: "systemctl\\s+(stop|disable|mask)\\s+[^\\n;&|]*\\b(postgres(?:ql)?|caddy|cloudflared|docker)\\b"
+    reason: >-
+      Stopping or disabling a production unit (, postgres, caddy,
+      cloudflared, docker) is Tier C. Confirm with the owner and state the
+      rollback plan first.
+
+# Tier B — mutating host state; allowed but must carry a rollback plan.
+tier_b:
+  - id: service_restart
+    re: "systemctl\\s+(restart|reload|force-reload)\\b"
+  - id: docker_compose
+    re: "(?<![\\w.-])docker(?:\\s+|-)compose\\b"
+  - id: firewall
+    re: "(?<![\\w.-])(ufw|iptables|nft)\\b"
+  - id: nginx_reload
+    re: "(?<![\\w.-])nginx\\b[^\\n;&|]*\\b(-s\\s*(reload|quit|reopen)|reload)\\b|systemctl\\s+\\S*\\s*nginx"
+tier_b_context: "Tier B: state rollback plan required before this command runs."
+
+# D18 — foreground sleep (session forensics 2026-10-02: chained `sleep 60`
+# foregrounds stalled turns for minutes). A foreground sleep >= min_seconds is
+# denied; the sanctioned waits are run_in_background: true or a polling
+# `until <check>; do sleep 5; done` loop (loop bodies are cut out before
+# matching). Runs on the same data-stripped surface as tier B/C.
+sleep:
+  min_seconds: 20
+  block_reason: >-
+    Foreground sleep of {seconds:.0f}s stalls the turn. Run the command with
+    run_in_background=true, or poll with an `until <check>; do sleep 5; done`
+    loop instead.
+
+# GLiNER risk tier — log only, never blocks, never asks.
+risk_tier:
+  mode: log
+  emit: log
+  threshold: 0.80
+  margin: 0.15
+  labels:
+    none: "Read-only or trivially reversible: listing, reading, grep, tests."
+    low: "Local file writes or scratch-space edits outside the protected trees."
+    medium: "Service restarts, package installs, config reloads, container changes."
+    high: "Deletes study data, mutates the ledger, or touches production secrets."
+    critical: "Destructive host action: force push, mkfs, dd to a device, DROP TABLE."

@@ -1,0 +1,11 @@
+{
+  "name": "ai-agent-setup",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Node dependencies for the MCP servers launched from mcp/mcp_servers.json (opencode-hub).",
+  "dependencies": {
+    "@cloudflare/mcp-server-cloudflare": "^0.2.0",
+    "@google-cloud/gcloud-mcp": "^0.5.3",
+    "exa-mcp-server": "^3.4.1"
+  }
+}

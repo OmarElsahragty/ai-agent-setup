@@ -1,0 +1,53 @@
+# D2 — execution-lane and research-need classification (one context line).
+version: 1
+
+# Deterministic money-path keywords. A hit is authoritative: lane = HEAVY,
+# regardless of what the model head says. Deterministic rules always act.
+deterministic_money_keywords:
+  - fee
+  - cash
+  - drawdown
+  - engine
+  - c++
+  - parity
+  - oracle
+  - ledger
+  - settlement
+  - shield
+# Matched case-insensitively on word boundaries; "c++" is escaped, others are
+# matched as substrings bounded by non-word characters (so "feed" != "fee").
+
+# Deterministic research keywords -> needs_research = yes.
+deterministic_research_keywords:
+  - internet research
+  - web search
+  - latest docs
+  - look up online
+  - compare libraries
+  - official documentation
+  - github issue
+  - market data api
+
+deterministic_lane: HEAVY
+
+lane:
+  id: D2
+  mode: log
+  emit: context
+  threshold: 0.40
+  margin: 0.00
+  labels:
+    "DIRECT": "One tiny change: at most 3 files, one test command, no parallel work."
+    "MEDIUM": "Bigger change: over 3 files, or several independent edits run in parallel."
+    "HEAVY": "Deep engineering: C++ engine, quant math, money paths, parity or oracle work."
+needs_research:
+  id: D2
+  mode: log
+  emit: context
+  threshold: 0.60
+  margin: 0.20
+  labels:
+    "yes": "Cannot be answered locally: needs web pages, external docs, vendor or API facts."
+    "no": "Answerable from the local repo, files and memory; no internet needed."
+format: "Lane: {lane} (width: {width} | files: {files}). Research needed: {research}."
+context_prefix: "Routing hint (auto):"

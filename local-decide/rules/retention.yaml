@@ -1,0 +1,12 @@
+# Retention for the JSONL decision log. Read by decisions.retention_config().
+retention:
+  # text_head is capped here AND redacted with decisions.SECRET_PATTERNS
+  # before the write. Never raise the cap above 400 without a redaction audit.
+  text_head_chars: 200
+  # Rotation: when the file reaches max_bytes it is trimmed to keep_last_lines
+  # lines (atomic tmp+rename). At most max_rotations .N files are kept.
+  max_bytes: 33554432        # 32 MiB
+  keep_last_lines: 200000
+  max_rotations: 2
+  # Reserved for a future rate limiter (dedupe identical log-only decisions).
+  min_interval_s: 0.0

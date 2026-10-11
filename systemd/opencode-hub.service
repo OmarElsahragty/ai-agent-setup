@@ -1,0 +1,43 @@
+# /etc/systemd/system/opencode-hub.service: the single instance of every homelab MCP (shared by the
+[Unit]
+Description=opencode-hub (shared homelab MCPs + local-decide hooks + OpenCode config)
+After=network-online.target local-decide.service tailscaled.service
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+WorkingDirectory=${HOME}
+# systemd sets no HOME for root services; codebase-memory refuses to start without it
+Environment=HOME=${HOME}
+Environment=OPENCODE_HUB_URL=http://127.0.0.1:8790
+# off-box clients reach the hub only through Tailscale (port 8790 stays closed on the LAN)
+Environment=OPENCODE_HUB_ALLOWED_NETS=${OPENCODE_HUB_ALLOWED_NETS}
+# this server's own addresses count as local: server clients never get the laptop view (work memory)
+Environment=OPENCODE_HUB_BIND=127.0.0.1
+Environment=OPENCODE_HUB_PORT=8790
+ExecStart=/usr/bin/python3 ${AI_SETUP_ROOT}/opencode-hub/opencode-hub.py
+# every MCP client on this box depends on it: come back from any exit, never give up
+Restart=always
+RestartSec=3
+KillMode=control-group
+TimeoutStopSec=15
+# Runs as root because the shared MCPs need root-only config and secrets (no browser is reachable
+NoNewPrivileges=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RestrictRealtime=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+TasksMax=2048
+MemoryHigh=4G
+MemoryMax=6G
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

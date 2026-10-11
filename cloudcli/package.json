@@ -1,0 +1,9 @@
+{
+  "name": "cloudcli-deploy",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Pinned CloudCLI (@cloudcli-ai/cloudcli) deployment for ${AI_SETUP_DOMAIN}",
+  "dependencies": {
+    "@cloudcli-ai/cloudcli": "1.37.3"
+  }
+}

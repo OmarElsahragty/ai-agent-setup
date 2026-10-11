@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+models/
+.pytest_cache/
+bench/
+llama.cpp/
+whisper.cpp/
+models/ggml/

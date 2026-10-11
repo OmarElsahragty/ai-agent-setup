@@ -1,0 +1,57 @@
+[Unit]
+Description=Local Decision Service (GLiNER2 classifiers — decide / guardrails / PII) :11438
+Documentation=file://${AI_SETUP_ROOT}/local-decide/
+After=network.target
+# Config: /etc/local-ai/models/REVISIONS.txt (pinned HF commit SHAs)
+# App:    ${AI_SETUP_ROOT}/local-decide/server.py (FastAPI, written by Batch B)
+# Serves OpenAI-agnostic POST /classify on 11438. CPU-only (torch CPU wheel).
+# Batch A (2026-10-02) installed + reloaded this unit but deliberately left it
+# DISABLED and stopped: server.py does not exist yet. Batch B writes it, then
+# `systemctl enable --now local-decide`.
+
+[Service]
+Type=simple
+User=${USER}
+Group=${USER}
+WorkingDirectory=${AI_SETUP_ROOT}/local-decide
+ExecStart=/opt/local-ai/decide-venv/bin/uvicorn server:app --host 127.0.0.1 --port 11438 --workers 1
+
+# --- Model cache: HF_HOME pins the model root; HF_HUB_OFFLINE=1 makes the
+#     service fail fast instead of silently reaching for the network at runtime.
+#     All weights are pre-downloaded at pinned revisions (REVISIONS.txt).
+Environment=HF_HOME=/opt/local-ai/models/hf
+Environment=HF_HUB_OFFLINE=1
+
+Restart=always
+RestartSec=5
+TimeoutStartSec=120
+TimeoutStopSec=15
+KillMode=mixed
+FinalKillSignal=SIGKILL
+SendSIGKILL=yes
+
+# --- Memory: three GLiNER2 encoders resident at once (~1.5 GB weights each in
+#     fp32 worst case) + tokenizer + torch runtime. Cap at 6G so the host keeps
+#     >= 6 GiB available; torch is the reclaim target under pressure.
+MemoryMax=6G
+MemoryHigh=5G
+MemoryMin=128M
+MemorySwapMax=0
+
+# --- CPU priority: inference service, yield to the agent lane ---
+Nice=10
+CPUWeight=50
+IOSchedulingClass=best-effort
+IOSchedulingPriority=6
+IOWeight=50
+OOMScoreAdjust=200
+OOMPolicy=kill
+
+# --- Hardening: read-only system, writable only the app dir, state dir, cache ---
+ProtectSystem=strict
+ReadWritePaths=${AI_SETUP_ROOT}/local-decide ${AI_SETUP_ROOT}/state/local-decide /opt/local-ai/models/hf
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

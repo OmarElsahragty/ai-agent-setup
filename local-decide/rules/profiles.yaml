@@ -1,0 +1,18 @@
+# Client profiles (owner ruling 2026-10-05). "opencode-mac" = the work MacBook's OpenCode, relayed by
+# opencode-hub. The laptop keeps its own rules and subagents, so it gets safety + memory recall only:
+# D1 recall (work store, no homelab domain gate), D7, D8 (ids below), D18, D13. No D2/D3/D4/D17, no tier B.
+version: 1
+
+opencode-mac:
+  memory_db: work_memory      # never the homelab unified_memory store
+  d8_tier_c:                  # kept from rules/bash.yaml (the rest name homelab paths/units/policies)
+    - destructive_sql
+    - git_force_push
+    - mkfs
+    - dd_to_device
+  d8_extra_tier_c:
+    - id: rm_rf_mac_roots
+      re: "(?<![\\w.-])rm\\s+(?:(?:-[a-zA-Z]*[rRfF][a-zA-Z]*|--recursive|--force)\\s+)+(?:--\\s+)?[\"']?(?:/|~|\\$HOME|\\$\\{HOME\\}|/Users(?:/[^/\\s;&|\"']+)?|~/Bazaarvoice|\\$HOME/Bazaarvoice|\\$\\{HOME\\}/Bazaarvoice|/Applications|/Library|/System|/opt/homebrew)/?[\"']?(?=\\s|$|;|&|\\|)"
+      reason: >-
+        Recursive delete of /, the home folder, ~/Bazaarvoice or a system folder. Delete the specific
+        subfolder instead, or ask the owner first.

@@ -1,0 +1,22 @@
+[Unit]
+Description=claude-router - Claude Code model router (Anthropic subscription/API key + OpenCode Go)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=${USER}
+Group=${USER}
+ExecStart=/usr/bin/node ${AI_SETUP_ROOT}/claude-router/server.js
+WorkingDirectory=${AI_SETUP_ROOT}/claude-router
+Environment="HOME=${HOME}"
+Environment="USER=${USER}"
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+EnvironmentFile=${AI_SETUP_ROOT}/claude-router/.env
+Restart=always
+RestartSec=3
+TimeoutStopSec=10
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target

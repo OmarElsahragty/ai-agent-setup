@@ -1,0 +1,169 @@
+# GENERATED FILE - do not edit by hand.
+# Source of truth: subagents/*.md (canonical bodies + frontmatter).
+# Regenerate with: python3 scripts/sync-all-agents.py
+# Consumed by the local-decide MCP router: routing card, tool allow-list, turn budget.
+agents:
+  android-engineer:
+    description: "Use for: native Android — Compose UI, OWASP MASVS hardening, emulator build-install-verify. Never for: backend services, money or quant logic, Docker/systemd ops, web design tokens. Inputs: module, build variant, target device. Outputs: Kotlin/Compose changes, APK build log, emulator evidence, gate report."
+    tools_allowed:
+      - "Read"
+      - "Glob"
+      - "Grep"
+      - "Edit"
+      - "Write"
+      - "Bash"
+      - "mcp__android-adb__*"
+      - "mcp__unified-memory__*"
+      - "mcp__codebase-memory__*"
+      - "mcp__local-decide__*"
+    maxTurns: 400
+  code-reviewer:
+    description: "Use for: the single review gate — correctness, security, regressions plus architecture, modularity and smells. Never for: writing or fixing code, browser acceptance flows, money or quant math. Inputs: diff or files under review, invariants. Outputs: severity-tagged findings at file:line and a verdict."
+    tools_allowed:
+      - "Read"
+      - "Glob"
+      - "Grep"
+      - "Bash"
+      - "mcp__unified-memory__*"
+      - "mcp__codebase-memory__*"
+      - "mcp__local-decide__*"
+    maxTurns: 250
+  database-analyst:
+    description: "Use for: read-only PostgreSQL schema, query, lock and migration-plan review, Drizzle parity, index and performance analysis. Never for: DDL, DML, data deletion, secret output, code refactors, infra restarts. Inputs: schema files, query text, connection scope. Outputs: findings at schema:table:column, risk-ranked migration plan, gate evidence."
+    tools_allowed:
+      - "Read"
+      - "Glob"
+      - "Grep"
+      - "mcp__unified-memory__*"
+      - "mcp__codebase-memory__*"
+      - "mcp__postgres__pg_execute_query"
+      - "mcp__postgres__pg_monitor_database"
+      - "mcp__postgres__pg_analyze_database"
+      - "mcp__postgres__pg_debug_database"
+      - "mcp__local-decide__*"
+    maxTurns: 200
+  homelab-operator:
+    description: "Use for: Docker, systemd, networking, reverse proxy, backups and host state on this host. Never for: application code, money or quant logic, DB schema design, internet research, code review. Inputs: target unit, desired state, blast radius. Outputs: baseline snapshot, commands run, rollback plan, post-change health check."
+    tools_allowed:
+      - "Read"
+      - "Glob"
+      - "Grep"
+      - "Edit"
+      - "Write"
+      - "Bash"
+      - "mcp__unified-memory__*"
+      - "mcp__codebase-memory__*"
+      - "mcp__local-decide__*"
+    maxTurns: 400
+  implementer:
+    description: "Use for: medium implementation, refactors, config and docs. Never for: C++/quant/money/parity (quant-engineer), review (code-reviewer), tests (tester), DB schema (database-analyst), Docker/systemd (homelab-operator), internet (research). Inputs: TASK, SCOPE, files, test command. Outputs: files modified, changes, decisions, risks, gate evidence."
+    tools_allowed:
+      - "Read"
+      - "Glob"
+      - "Grep"
+      - "Edit"
+      - "Write"
+      - "Bash"
+      - "mcp__unified-memory__*"
+      - "mcp__codebase-memory__*"
+      - "mcp__local-decide__*"
+    maxTurns: 400
+  qa:
+    description: "Use for: acceptance criteria validation and live API or browser evidence after code-reviewer and tester. Never for: fixing code, authoring tests, internet research, DB or infra changes. Inputs: acceptance criteria, endpoints, secret-free URLs. Outputs: HTTP and Playwright evidence, pass/fail per criterion, gaps."
+    tools_allowed:
+      - "Read"
+      - "Glob"
+      - "Grep"
+      - "Bash"
+      - "mcp__playwright__*"
+      - "mcp__unified-memory__*"
+      - "mcp__codebase-memory__*"
+      - "mcp__local-decide__*"
+    maxTurns: 300
+  quant-engineer:
+    description: "Use for: money paths, C++ engine, quant math, backtest/oracle/parity, execution waterfalls, cash and drawdown accounting. Never for: general refactors, UI, infra ops, internet research, DB schema review. Inputs: files, symbols, strategy invariants, numeric tolerances. Outputs: patched code, numeric or byte-identity parity proof, gate evidence."
+    tools_allowed:
+      - "Read"
+      - "Glob"
+      - "Grep"
+      - "Edit"
+      - "Write"
+      - "Bash"
+      - "mcp__unified-memory__*"
+      - "mcp__codebase-memory__*"
+      - "mcp__postgres__*"
+      - "mcp__local-decide__*"
+    maxTurns: 800
+  research:
+    description: "Use for: all internet research — external docs, benchmarks, vendor comparison, API and library behavior. Never for: local code edits, money or quant math, infra ops, acceptance testing. Inputs: question, constraints, freshness window. Outputs: cited findings with URLs, dates and a recommendation."
+    tools_allowed:
+      - "Read"
+      - "Grep"
+      - "Glob"
+      - "mcp__exa__*"
+      - "mcp__unified-memory__*"
+      - "mcp__codebase-memory__*"
+      - "mcp__local-decide__*"
+    maxTurns: 150
+  security-reviewer:
+    description: "Use for: read-only security audit of exposure, auth, permissions, secrets, systemd, containers and network. Never for: editing files, mutating state, infra changes, money or quant logic. Inputs: changed surface, threat-model hints. Outputs: ranked findings at file:line with severity and remediation advice."
+    tools_allowed:
+      - "Read"
+      - "Glob"
+      - "Grep"
+      - "Bash"
+      - "mcp__unified-memory__*"
+      - "mcp__codebase-memory__*"
+      - "mcp__local-decide__*"
+    maxTurns: 200
+  tester:
+    description: "Use for: test discovery and execution, bug reproduction, one negative control proving a gate can fail. Never for: fixing source, browser acceptance flows, reviews, DB or infra changes. Inputs: test command, target scope, expected invariants. Outputs: pass/fail counts, exit codes, failure diagnosis, gate evidence."
+    tools_allowed:
+      - "Read"
+      - "Glob"
+      - "Grep"
+      - "Bash"
+      - "mcp__unified-memory__*"
+      - "mcp__codebase-memory__*"
+      - "mcp__local-decide__*"
+    maxTurns: 300
+  ui-designer:
+    description: "Use for: all UI/UX design, Stitch and Claude Design screens, design systems, DESIGN.md, implementation specs. Never for: backend or engine code, money or quant math, infra ops, DB schema. Inputs: screens, brand tokens, target platform. Outputs: design artifacts, tokens, per-screen handoff spec, a11y notes."
+    tools_allowed:
+      - "Read"
+      - "Grep"
+      - "Glob"
+      - "Bash"
+      - "Write"
+      - "Edit"
+      - "mcp__stitch__*"
+      - "mcp__claude-design__*"
+      - "mcp__playwright__*"
+      - "mcp__unified-memory__*"
+      - "mcp__codebase-memory__*"
+      - "mcp__exa__*"
+      - "mcp__local-decide__*"
+    maxTurns: 400
+  # Claude Code built-ins (not canonical files, routed by the same role plan).
+  Explore:
+    description: "Use for: locating files, symbols and call paths in an unfamiliar repo. Never for: editing files, mutating state, or answering without file:line proof. Inputs: a question or a target path. Outputs: a file list or symbol map with file:line."
+    tools_allowed:
+      - "Read"
+      - "Glob"
+      - "Grep"
+      - "Bash"
+      - "mcp__codebase-memory__*"
+      - "mcp__unified-memory__*"
+      - "mcp__local-decide__*"
+    maxTurns: 60
+  Plan:
+    description: "Use for: designing an implementation plan with no writes. Never for: editing files, mutating state, or executing the plan. Inputs: a goal, constraints, target files. Outputs: an atomic numbered plan with paths and a test command."
+    tools_allowed:
+      - "Read"
+      - "Glob"
+      - "Grep"
+      - "WebFetch"
+      - "mcp__codebase-memory__*"
+      - "mcp__unified-memory__*"
+      - "mcp__local-decide__*"
+    maxTurns: 60

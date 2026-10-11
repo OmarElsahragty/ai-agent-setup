@@ -1,0 +1,13 @@
+{
+  "name": "cloudcli-voice-addon",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "description": "Browser voice add-on for CloudCLI 1.37.3: one-button Gemini Live voice call (Egyptian Arabic) bridged to the open Claude Code session",
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

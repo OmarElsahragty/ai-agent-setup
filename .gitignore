@@ -1,0 +1,43 @@
+# secrets and machine-local state — never commit
+.env
+.env.*
+!.env.example
+*.bak
+*.bak.*
+claude-router/.env
+
+# generated MCP wiring (the hub writes these; the .example files are committed)
+mcp/mcp_config.json
+mcp/mcp_servers.json
+mcp/postgres-tools-config.json
+
+# generated links/state
+.claude/
+CLAUDE.md
+.mcp.json
+GEMINI.md
+
+# runtime state and data
+state/
+data/
+logs/
+run/
+*.jsonl
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# node
+node_modules/
+npm-debug.log*
+
+# editors / os
+.DS_Store
+*.swp
+
+# opencode-hub build output (regenerate with: python3 opencode-hub/gen-hub-content.py)
+opencode-hub/public/

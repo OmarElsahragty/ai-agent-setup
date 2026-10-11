@@ -1,0 +1,157 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "username": "${AI_SETUP_USER}",
+  "model": "opencode-go/deepseek-v4.1-flash",
+  "small_model": "opencode-go/deepseek-v4.1-flash",
+  "agent": {
+    "ask": {
+      "mode": "primary",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "variant": "max",
+      "prompt": "You are the primary ask agent. Respond strictly in English."
+    },
+    "explore": {
+      "mode": "primary",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "variant": "max",
+      "prompt": "You are the primary explore agent. Respond strictly in English."
+    },
+    "general": {
+      "mode": "primary",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "variant": "max",
+      "prompt": "You are the general-purpose assistant. Respond strictly in English."
+    },
+    "build": {
+      "mode": "primary",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "variant": "max",
+      "prompt": "You are the primary build agent. Respond strictly in English."
+    },
+    "plan": {
+      "mode": "primary",
+      "model": "anthropic/claude-opus-5-5",
+      "prompt": "You are the primary plan agent. Respond strictly in English."
+    },
+    "title": {
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "variant": "max",
+      "prompt": "You are a thread title generator. You output ONLY a single short title in the English language (maximum 50 characters). Never output non-English text. Never explain."
+    },
+    "summary": {
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "variant": "max",
+      "prompt": "You are a conversation summarizer. Summarize the conversation concisely in English."
+    },
+    "compaction": {
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "variant": "max",
+      "prompt": "You are the context compactor for a long-running engineering/research session. Your summary REPLACES the older conversation, so anything you drop is lost. Write strictly in English, as a dense structured handoff (no prose filler), using exactly these sections:\n1. GOAL - the user's objective and success target, verbatim where the user was specific (numbers, thresholds, targets).\n2. HARD RULES - every constraint in force (isolation/sandbox paths, read-only DB role, no commits, no writes outside allowed dirs, no look-ahead, holdout-once, resource limits). Copy them exactly; never soften.\n3. STATE ON DISK - the ledger/plan/progress file paths and what each holds; say \"re-read these first after compaction\".\n4. PROGRESS - phases/steps done with their GATE EVIDENCE (command -> exit code) and the key numbers produced (metrics with CIs, counts, file sizes). Numbers exactly as measured; never round away or invent.\n5. DECISIONS - each decision taken and its reason, including rejected/reverted attempts and why (so they are not retried).\n6. OPEN ISSUES - failures, bugs, blockers, anomalies, and unverified claims.\n7. FILES - every file created or modified (absolute path + one-line purpose).\n8. NEXT STEP - the exact next action and the command to run.\nKeep identifiers, paths, column names, parameters and error messages verbatim. Prefer keeping a fact over brevity when in doubt."
+    },
+    "compact": {
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "variant": "max",
+      "prompt": "You are the context compactor for a long-running engineering/research session. Your summary REPLACES the older conversation, so anything you drop is lost. Write strictly in English, as a dense structured handoff (no prose filler), using exactly these sections:\n1. GOAL - the user's objective and success target, verbatim where the user was specific (numbers, thresholds, targets).\n2. HARD RULES - every constraint in force (isolation/sandbox paths, read-only DB role, no commits, no writes outside allowed dirs, no look-ahead, holdout-once, resource limits). Copy them exactly; never soften.\n3. STATE ON DISK - the ledger/plan/progress file paths and what each holds; say \"re-read these first after compaction\".\n4. PROGRESS - phases/steps done with their GATE EVIDENCE (command -> exit code) and the key numbers produced (metrics with CIs, counts, file sizes). Numbers exactly as measured; never round away or invent.\n5. DECISIONS - each decision taken and its reason, including rejected/reverted attempts and why (so they are not retried).\n6. OPEN ISSUES - failures, bugs, blockers, anomalies, and unverified claims.\n7. FILES - every file created or modified (absolute path + one-line purpose).\n8. NEXT STEP - the exact next action and the command to run.\nKeep identifiers, paths, column names, parameters and error messages verbatim. Prefer keeping a fact over brevity when in doubt."
+    }
+  },
+  "instructions": [
+    "${AI_SETUP_ROOT}/rules/AGENTS.md"
+  ],
+  "permission": {
+    "*": "allow",
+    "read": {
+      "*": "allow",
+      "**/.env": "deny",
+      "**/*.env": "deny",
+      "**/.env.*": "deny",
+      ".env": "deny",
+      "*.env": "deny",
+      ".env.*": "deny"
+    },
+    "edit": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "list": "allow",
+    "bash": "allow",
+    "task": "allow",
+    "external_directory": {
+      "*": "allow"
+    },
+    "todowrite": "allow",
+    "question": "allow",
+    "webfetch": "deny",
+    "websearch": "deny",
+    "lsp": "allow",
+    "doom_loop": "allow",
+    "skill": "allow"
+  },
+  "provider": {
+    "opencode-go": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "OpenCode Go",
+      "options": {
+        "baseURL": "${OPENCODE_GO_BASE_URL}",
+        "apiKey": "{env:OPENCODE_GO_API_KEY}",
+        "headerTimeout": 180000,
+        "chunkTimeout": 300000,
+        "timeout": false,
+        "maxRetries": 5
+      },
+      "models": {
+        "deepseek-v4.1-flash": {
+          "name": "DeepSeek V4.1 Flash",
+          "reasoning": true,
+          "attachment": false,
+          "modalities": {
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "interleaved": {
+            "field": "reasoning_content"
+          },
+          "variants": {
+            "max": {
+              "reasoning_effort": "max",
+              "thinking": {
+                "type": "enabled"
+              }
+            }
+          },
+          "limit": {
+            "context": 1000000,
+            "output": 384000
+          }
+        }
+      }
+    }
+  },
+  "enabled_providers": [
+    "opencode-go",
+    "anthropic"
+  ],
+  "plugin": [],
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "tail_turns": 8,
+    "preserve_recent_tokens": 40000,
+    "reserved": 748576
+  },
+  "experimental": {
+    "mcp_timeout": 600000
+  },
+  "mcp": {
+    "cloudcli-browser": {
+      "type": "local",
+      "command": [
+        "/usr/bin/node",
+        "${AI_SETUP_ROOT}/cloudcli/node_modules/@cloudcli-ai/cloudcli/dist-server/server/modules/browser-use/browser-use-mcp.js"
+      ],
+      "enabled": true,
+      "environment": {
+        "CLOUDCLI_BROWSER_USE_MCP_TOKEN": "{env:CLOUDCLI_BROWSER_USE_MCP_TOKEN}",
+        "CLOUDCLI_BROWSER_USE_API_URL": "http://127.0.0.1:3011/api/browser-use-mcp"
+      }
+    }
+  }
+}

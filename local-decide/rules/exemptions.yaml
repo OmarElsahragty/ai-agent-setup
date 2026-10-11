@@ -1,0 +1,12 @@
+# Exemptions from deterministic guards. Scoped narrowly and read-only for the
+# guards they do NOT mention: an unlisted rule is never exempt, and the D7
+# secret rule is NEVER exempt anywhere (a credential in a test fixture is
+# still a credential on disk).
+version: 1
+
+d7:
+  # (a) zero-mock KPI fallback: `?? <number>` is legitimate in test/fixture
+  # files (negative controls assert the empty-state contract). Skipped ONLY
+  # for the paths below; the secret, destructive-SQL and .env rules still run.
+  mock_fallback:
+    skip_path_re: "(?:^|/)(?:tests?|__tests__|fixtures?|__mocks__)(?:/|$)|\\.(?:test|spec)\\.[A-Za-z0-9]+(?:$|/)"
